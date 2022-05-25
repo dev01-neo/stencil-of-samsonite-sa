@@ -1,0 +1,354 @@
+---
+product:
+    videos:
+        limit: {{theme_settings.productpage_videos_count}}
+    reviews:
+        limit: {{theme_settings.productpage_reviews_count}}
+    related_products:
+        limit: {{theme_settings.productpage_related_products_count}}
+    similar_by_views:
+        limit: {{theme_settings.productpage_similar_by_views_count}}
+---
+{{inject 'productId' product.id}}
+{{inject "cat" product.category}}
+{{inject "productModel" product.title}}
+
+{{#each product.custom_fields}}
+{{#if name '===' 'Sizes'}}
+{{inject "productsize" value}}
+{{/if}}
+{{#if name '===' 'Colour'}}
+{{inject "productcolor" value}}
+{{/if}}
+{{/each}}
+
+{{#each product.custom_fields}}
+{{#if name '===' 'HIDE_FIELDS'}}
+{{inject "hiddenelement" value}}
+{{/if}}
+{{/each}}
+{{#partial "page"}}
+
+{{> components/common/breadcrumbs breadcrumbs=breadcrumbs}}
+
+{{#each product.shipping_messages}}
+{{> components/common/alert/alert-info message}}
+{{/each}}
+
+<style>
+  .selected {
+    color: red;
+    border: 1px solid red;
+  }
+</style>
+
+<div>
+  <h1>{{product.category}}</h1>
+</div>
+<div>
+  <h1>{{product.title}}</h1>
+</div>
+
+<div>
+  <ul class="small-block-grid-2 medium-block-grid-3 large-block-grid-4 size">
+    <h1>Size</h1>
+  </ul>
+  <ul class="small-block-grid-2 medium-block-grid-3 large-block-grid-4 color">
+    <h1>Color</h1>
+  </ul>
+  {{> components/products/product-view}}
+
+  {{{region name="product_below_content"}}}
+
+  {{#if product.videos.list.length}}
+  {{> components/products/videos product.videos}}
+  {{/if}}
+
+  {{#all settings.show_product_reviews theme_settings.show_product_reviews (if theme_settings.show_product_details_tabs
+  '!==' true)}}
+  {{> components/products/reviews reviews=product.reviews product=product urls=urls}}
+  {{/all}}
+
+  {{> components/products/tabs}}
+</div>
+
+{{> components/products/schema}}
+{{/partial}}
+{{> layout/base}}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+  var jsContext = JSON.parse({{ jsContext }});
+  var productModel = jsContext.productModel
+  var productsize = jsContext.productsize
+  var productcolor = jsContext.productcolor
+  var pdid = jsContext.productId
+
+  console.log("samsonite", productsize, productcolor, pdid)
+  var models = [];
+  var size = [];
+
+  //var pd_cat=cat
+  //console.log("samsonite",productModel)
+  var data1 = fetch('/graphql', {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer {{ settings.storefront_api.token }}`
+    },
+    body: JSON.stringify({
+      query: `
+ query LookUpUrl{
+   site {
+     route(path:"/proxis/") {
+       node {
+         __typename
+         id
+         # A different response is returned based on which type of object was matched
+         ... on Category {
+           name
+           description
+          products
+          {
+            edges{
+              node{
+                id
+                entityId
+                name
+                path
+                customFields
+                {
+                  edges
+                  {
+                    node{
+                      entityId
+                      name
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          }
+         }
+         ... on Brand {
+           name
+           defaultImage {
+             url(width: 200)
+           }
+         }
+         ... on Product {
+           name
+           description
+           images {
+             edges {
+               node {
+                 url(width: 500, height: 500)
+               }
+             }
+           }
+         }
+       }
+     }
+   }
+ }
+`
+    })
+  })
+    .then(res => res.json())
+    .then(samsonite => {
+
+      var sizemain
+      var sizepath
+      var sizeid
+      var colors
+      var selectedColor
+      var arr
+      samsonite.data.site.route.node.products.edges.forEach(main => {
+
+        console.log("custommain", main)
+        main.node.customFields.edges.forEach(custommain => {
+          //console.log("custommain",custommain)
+
+          if (custommain.node.name == "Sizes") {
+            sizemain = custommain.node.value
+            sizepath = main.node.path
+            sizeid = main.node.entityId
+
+          }
+          if (custommain.node.name == "Colour") {
+
+            colors = custommain.node.value
+          }
+
+        })
+
+        size.push({ 'size': sizemain, 'path': sizepath, "id": sizeid, "color": colors })
+
+      })
+      //console.log("size", size)
+
+      function removeDuplicatesBy(keyFn, array) {
+        var mySet = new Set();
+        return array.filter(function (x) {
+          var key = keyFn(x), isNew = !mySet.has(key);
+          if (isNew) mySet.add(key);
+          return isNew;
+        });
+      }
+      arr = removeDuplicatesBy(x => x.size, size);
+      //console.log("arr", arr);
+
+
+      arr.forEach(gotSize => {
+        console.log("neov gotSize", gotSize)
+        console.log('neov product size', productsize)
+
+        if (productsize == gotSize.size) {
+
+
+          // find the size siblings of the products 
+          var sizeSiblings = samsonite.data.site.route.node.products.edges.filter(({ node }) => {
+            return node.customFields.edges.find(cF => {
+              if (cF.node.name === 'Sizes') {
+                return productsize === cF.node.value
+              } else {
+                return false
+              }
+            })
+          })
+
+
+
+          // now get all variant colours from size siblings
+
+
+          sizeSiblings.forEach(productsFieldOne => {
+            console.log('customFieldOne customFieldOne', productsFieldOne);
+            productsFieldOne.node.customFields.edges.forEach(customFieldOne => {
+
+
+              if (customFieldOne.node.name == 'Colour') {
+
+                if (customFieldOne.node.value == productcolor) {
+                  console.log("the cutome feild", customFieldOne.node.value == productcolor)
+
+                  // This is the selected color
+                  // now just highlight it 
+                  $('.color').append(`<li data-size=""><a class="sizePd getColor selected pdSelect${productsFieldOne.node.entityId} " href="${productsFieldOne.node.path}" data-size="${productsFieldOne.node.name}" data-color="${customFieldOne.node.value}">${customFieldOne.node.value}</a></li>`)
+
+
+                  //console.log("size",size)
+
+                }
+                else {
+                  // Unselect all other colours
+                  $('.color').append(`<li data-size=""><a class="sizePd getColor  pdSelect${productsFieldOne.node.entityId}" href="${productsFieldOne.node.path}" data-size="${productsFieldOne.node.name}" data-color="${customFieldOne.node.value}">${customFieldOne.node.value}</a></li>`)
+
+                }
+
+
+              }
+
+
+            })
+          })
+
+          selectedColor = $('.selected').data('color')
+          console.log("color", selectedColor)
+
+
+          $('.size').append(`<li  data-size="${gotSize.size}"><a class="sizePds sizePath selected pathAppend" data-size="${gotSize.size}" data-color="${selectedColor}" >${gotSize.size}</a></li>`)
+        }
+        else {
+
+
+          setTimeout(function () {
+            console.log("color", selectedColor)
+            $('.size').append(`<li  data-size="${gotSize.size}"><a class="sizePds pathAppend" data-size="${gotSize.size}" data-color="${selectedColor}">${gotSize.size}</a></li>`)
+
+
+          }, 500);
+
+        }
+
+      })
+
+
+
+      //PRODUCT SELECT LOGIC
+
+      $(document).on('click', '.sizePds', function (e, itemss) {
+
+        e.preventDefault();
+
+        var sizeSelected = $(this).attr('data-size');
+        var colorSelected = $(this).attr('data-color');
+
+        console.log("size, color ", sizeSelected, colorSelected)
+
+        arr.forEach(gotSize => {
+          console.log("neov gotSize", gotSize.size)
+
+
+          if (sizeSelected == gotSize.size) {
+
+
+            // find the size siblings of the products 
+            var sizeSiblings = samsonite.data.site.route.node.products.edges.filter(({ node }) => {
+              return node.customFields.edges.find(cF => {
+                if (cF.node.name === 'Sizes') {
+                  return sizeSelected === cF.node.value
+                } else {
+                  return false
+                }
+              })
+            })
+            // find the path of the product if color present
+            var colorSiblings = sizeSiblings.filter(({ node }) => {
+              console.log(node)
+
+              return node.customFields.edges.find(cF => {
+                if (cF.node.name === 'Colour') {
+                  return colorSelected === cF.node.value
+                } else {
+
+                  return false
+                }
+              })
+            })
+
+            // find the path of the product if color not present
+            var nonColorSiblings = sizeSiblings.filter(({ node }) => {
+              console.log(node)
+
+              return node.customFields.edges.find(cF => {
+                if (cF.node.name === 'Colour') {
+                  return colorSelected != cF.node.value
+                } else {
+
+                  return false
+                }
+              })
+            })
+            if (colorSiblings.length > 0) {
+              console.log("color sibling", colorSiblings[0].node.path)
+              window.location.replace(`${colorSiblings[0].node.path}`)
+            }
+            else {
+              console.log("non sibling", nonColorSiblings[0].node.path)
+              window.location.replace(`${nonColorSiblings[0].node.path}`)
+            }
+
+
+          }
+
+
+        })
+
+
+      });
+
+    })
+
+</script>
