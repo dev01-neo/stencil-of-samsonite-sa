@@ -9,9 +9,38 @@ product:
     similar_by_views:
         limit: {{theme_settings.productpage_similar_by_views_count}}
 ---
+
 {{inject 'productId' product.id}}
 
 {{#partial "page"}}
+
+<style>
+    .product-details-left {
+        width: 100%;
+    }
+    
+    .product-images-right {
+        display: flex;
+        width: 100%;
+    }
+    .thumbnail-slider-parent{
+        display: flex;
+        flex-direction: column;
+    }
+    .thumbnail-slider{
+        width: 90%;
+    }
+
+    /* scroll hider and parent of 6 6 columns image list */
+    
+    .scroll-hider{
+        height: 409px;
+        overflow: scroll;
+    }
+    .scroll-hider::-webkit-scrollbar {
+        display: none;
+    }
+</style>
 
     {{> components/common/breadcrumbs breadcrumbs=breadcrumbs}}
 

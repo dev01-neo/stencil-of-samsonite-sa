@@ -1,4 +1,8 @@
 
+<style>
+
+</style>
+
 <div class="productView"
     {{#if settings.data_tag_enabled}}
     data-event-type="product"
@@ -30,70 +34,9 @@
         {{/if}}
     {{/each}}
 
-    <section class="productView-images" data-image-gallery>
-        {{!--
-            Note that these image sizes are coupled to image sizes used in /assets/js/theme/common/product-details.js
-            for variant/rule image replacement
-        --}}
-        {{#if product.images.length '>' 1 }}
-        {{> components/carousel-content-announcement}}
-        {{/if}}
-        <figure class="productView-image"
-                data-image-gallery-main
-                {{#if product.main_image}}
-                data-zoom-image="{{getImageSrcset product.main_image (cdn theme_settings.default_image_product) 1x=theme_settings.zoom_size }}"
-                {{/if}}
-                >
-            <div class="productView-img-container">
-                {{!-- Remove the surrounding a-element if there is no main image. --}}
-                {{#if product.main_image}}
-                    <a href="{{getImageSrcset product.main_image (cdn theme_settings.default_image_product) 1x=theme_settings.zoom_size}}"
-                        target="_blank">
-                {{/if}}
-                {{> components/common/responsive-img
-                    image=product.main_image
-                    class="productView-image--default"
-                    fallback_size=theme_settings.product_size
-                    lazyload=theme_settings.lazyload_mode
-                    default_image=theme_settings.default_image_product
-                    otherAttributes="data-main-image"
-                }}
-                {{!-- Remove the surrounding a-element if there is no main image. --}}
-                {{#if product.main_image}}
-                    </a>
-                {{/if}}
-            </div>
-        </figure>
-        <ul class="productView-thumbnails"{{#gt product.images.length 5}} data-slick='{
-                "infinite": false,
-                "mobileFirst": true,
-                "dots": false,
-                "accessibility": false,
-                "slidesToShow": 5,
-                "slidesToScroll": 5
-            }'{{/gt}}>
-            {{#each product.images}}
-                <li class="productView-thumbnail">
-                    <a
-                        class="productView-thumbnail-link"
-                        href="{{getImageSrcset this (cdn ../theme_settings.default_image_product) 1x=../theme_settings.zoom_size}}"
-                        data-image-gallery-item
-                        data-image-gallery-new-image-url="{{getImageSrcset this (cdn ../theme_settings.default_image_product) 1x=../theme_settings.product_size}}"
-                        data-image-gallery-new-image-srcset="{{getImageSrcset this use_default_sizes=true}}"
-                        data-image-gallery-zoom-image-url="{{getImageSrcset this (cdn ../theme_settings.default_image_product) 1x=../theme_settings.zoom_size}}"
-                    >
-                    {{> components/common/responsive-img
-                        image=this
-                        fallback_size=../theme_settings.productview_thumb_size
-                        lazyload=../theme_settings.lazyload_mode
-                    }}
-                    </a>
-                </li>
-            {{/each}}
-        </ul>
-    </section>
+<div class="large-6 columns">    
 
-    <section class="productView-details product-data">
+    <section class=".productView-details product-details-left product-data">
         <div class="productView-product">
             <h1 class="productView-title">{{product.title}}</h1>
             {{#if product.brand}}
@@ -101,19 +44,6 @@
                     <a href="{{product.brand.url}}"><span>{{product.brand.name}}</span></a>
                 </h2>
             {{/if}}
-            {{#if product.call_for_price}}
-                <p class="productView-price">
-                    <span>{{product.call_for_price}}</span>
-                </p>
-            {{/if}}
-            <div class="productView-price">
-                {{#or customer (if theme_settings.restrict_to_login '!==' true)}}
-                    {{> components/products/price price=product.price}}
-                {{else}}
-                    {{> components/common/login-for-pricing}}
-                {{/or}}
-            </div>
-            {{{region name="product_below_price"}}}
             <div class="productView-rating">
                 {{#if settings.show_product_rating}}
                     {{> components/products/ratings rating=product.rating}}
@@ -136,12 +66,29 @@
                     {{> components/products/modals/writeReview}}
                 {{/if}}
             </div>
+            {{#if product.call_for_price}}
+                <p class="productView-price">
+                    <span>{{product.call_for_price}}</span>
+                </p>
+            {{/if}}
+            <div class="productView-price">
+                {{#or customer (if theme_settings.restrict_to_login '!==' true)}}
+                    {{> components/products/price price=product.price}}
+                {{else}}
+                    {{> components/common/login-for-pricing}}
+                {{/or}}
+            </div>
+            {{{region name="product_below_price"}}}
             {{product.detail_messages}}
-            <dl class="productView-info">
+           
+<!-- sku commented -->
+
+            <!-- <dl class="productView-info">
                 <dt class="productView-info-name sku-label"{{#unless product.sku}} style="display: none;"{{/unless}}>{{lang 'products.sku'}}</dt>
                 <dd class="productView-info-value" data-product-sku>{{product.sku}}</dd>
                 <dt class="productView-info-name upc-label"{{#unless product.upc}} style="display: none;"{{/unless}}>{{lang 'products.upc'}}</dt>
-                <dd class="productView-info-value" data-product-upc>{{product.upc}}</dd>
+                <dd class="productView-info-value" data-product-upc>{{product.upc}}</dd> -->
+
                 {{#if product.condition}}
                     <dt class="productView-info-name">{{lang 'products.condition'}}</dt>
                     <dd class="productView-info-value">{{product.condition}}</dd>
@@ -226,7 +173,7 @@
         </div>
     </section>
 
-    <section class="productView-details product-options">
+    <section class="productView-details product-details-left product-options">
         <div class="productView-options">
             {{#if product.release_date }}
                 <p>{{product.release_date}}</p>
@@ -262,7 +209,106 @@
         </div>
         {{> components/common/share url=product.url}}
     </section>
+</div>
 
+
+<div class="large-6 columns">    
+
+<!-- <section class="productView-images product-images-right" data-image-gallery> -->
+        <div class="large-10 columns scroll-hider">
+    {{#each product.images}}
+            <div class="large-6 columns">
+                <ul style="list-style: none;">
+                    <li>
+                        {{> components/common/responsive-img
+                            image=this
+                            fallback_size=theme_settings.product_size
+                            lazyload=theme_settings.lazyload_mode
+                            default_image=theme_settings.default_image_product
+                        }} 
+                    </li>
+                </ul>
+            </div>
+    {{/each}}
+    
+    
+    <!-- {{!--
+            Note that these image sizes are coupled to image sizes used in /assets/js/theme/com.mon/product-details.js
+            for variant/rule image replacement
+        --}}
+        {{#if product.images.length '>' 1 }}
+        {{> components/carousel-content-announcement}}
+        {{/if}}
+        <figure class="productView-image large-10"
+                data-image-gallery-main
+                {{#if product.main_image}}
+                data-zoom-image="{{getImageSrcset product.main_image (cdn theme_settings.default_image_product) 1x=theme_settings.zoom_size }}"
+                {{/if}}
+                >
+            <div class="productView-img-container">
+                {{!-- Remove the surrounding a-element if there is no main image. --}}
+                {{#if product.main_image}}
+                    <a href="{{getImageSrcset product.main_image (cdn theme_settings.default_image_product) 1x=theme_settings.zoom_size}}"
+                        target="_blank">
+                {{/if}}
+                {{> components/common/responsive-img
+                    image=product.main_image
+                    class="productView-image--default"
+                    fallback_size=theme_settings.product_size
+                    lazyload=theme_settings.lazyload_mode
+                    default_image=theme_settings.default_image_product
+                    otherAttributes="data-main-image"
+                }}
+                {{!-- Remove the surrounding a-element if there is no main image. --}}
+                {{#if product.main_image}}
+                    </a>
+                {{/if}}
+            </div>
+        </figure> -->
+    </div>
+    <div class="large-2 columns">
+        <ul class="productView-thumbnails thumbnail-slider-parent"{{#gt product.images.length 5}} data-slick='{
+                "infinite": false,
+                "mobileFirst": true,
+                "dots": false,
+                "accessibility": false,
+                "slidesToShow": 5,
+                "slidesToScroll": 5
+            }'{{/gt}}>
+            {{#each product.images}}
+                <li class="productView-thumbnail thumbnail-slider">
+                    <a
+                        class="productView-thumbnail-link"
+                        href="{{getImageSrcset this (cdn ../theme_settings.default_image_product) 1x=../theme_settings.zoom_size}}"
+                        data-image-gallery-item
+                        data-image-gallery-new-image-url="{{getImageSrcset this (cdn ../theme_settings.default_image_product) 1x=../theme_settings.product_size}}"
+                        data-image-gallery-new-image-srcset="{{getImageSrcset this use_default_sizes=true}}"
+                        data-image-gallery-zoom-image-url="{{getImageSrcset this (cdn ../theme_settings.default_image_product) 1x=../theme_settings.zoom_size}}"
+                    >
+                    {{> components/common/responsive-img
+                        image=this
+                        fallback_size=../theme_settings.productview_thumb_size
+                        lazyload=../theme_settings.lazyload_mode
+                    }}
+                    </a>
+                </li>
+            {{/each}}
+        </ul>
+    </div>    
+    <!-- </section> -->
+</div>
+
+</div>
+
+
+
+<div id="previewModal" class="modal modal--large" data-reveal>
+    {{> components/common/modal/modal-close-btn }}
+    <div class="modal-content"></div>
+    <div class="loadingOverlay"></div>
+</div>
+
+<div class="large-6 columns">
     <article class="productView-description">
         {{#if theme_settings.show_product_details_tabs}}
             {{> components/products/description-tabs}}
@@ -270,10 +316,4 @@
             {{> components/products/description}}
         {{/if}}
     </article>
-</div>
-
-<div id="previewModal" class="modal modal--large" data-reveal>
-    {{> components/common/modal/modal-close-btn }}
-    <div class="modal-content"></div>
-    <div class="loadingOverlay"></div>
 </div>
